@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dino AI Workspace</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="app-page">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="/"><span class="brand-mark">D</span><span>DINO<span class="brand-light">AI</span></span></a>
+      <button class="new-chat" id="newChat"><span>＋</span> New conversation</button>
+      <div class="side-label">WORKSPACE</div>
+      <a class="side-link active" href="/"><span>◈</span> AI Assistant</a>
+      <a class="side-link" href="/companion"><span>⇄</span> Device companion <span class="side-badge">BETA</span></a>
+      <button class="side-link" id="showHistory"><span>◷</span> Recent tasks</button>
+      <div class="sidebar-bottom"><div class="plan-card"><div class="plan-icon">✦</div><b>Build something great</b><p>Dino is ready to help you think through your next task.</p></div><div class="user-row"><div class="user-avatar">{{ username[:1]|upper }}</div><div class="user-info"><b>{{ username }}</b><small>Personal workspace</small></div><form action="/logout" method="post"><button class="icon-button" title="Sign out" aria-label="Sign out">↗</button></form></div></div>
+    </aside>
+    <main class="main-panel">
+      <header class="app-header"><button class="mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button><div class="breadcrumb">Workspace <span>/</span> <b>AI Assistant</b></div><div class="header-right"><span class="connection-dot"></span><span>Workspace ready</span><button class="header-avatar">{{ username[:1]|upper }}</button></div></header>
+      <section class="chat-workspace">
+        <div class="welcome-block" id="welcomeBlock"><div class="welcome-mark"><span class="welcome-spark">✦</span><span class="welcome-d">D</span></div><div class="eyebrow centered-eyebrow">YOUR AI WORKFLOW PARTNER</div><h1>Hey {{ username }},<br><span class="gradient-text">what are we building?</span></h1><p>Ask a question, explore an idea, or turn a task into a clear plan.</p>
+          <div class="prompt-cards">
+            <button class="prompt-card" data-prompt="Help me plan a small full-stack Flask project."><span class="prompt-symbol purple">⌘</span><b>Plan a project</b><small>Turn an idea into clear steps</small><span class="prompt-arrow">↗</span></button>
+            <button class="prompt-card" data-prompt="Find official Python learning resources and tell me what each is best for."><span class="prompt-symbol red">✦</span><b>Research a topic</b><small>Explore trusted resources</small><span class="prompt-arrow">↗</span></button>
+            <button class="prompt-card" data-prompt="Help me debug a Flask API that is not returning a response."><span class="prompt-symbol green">⌁</span><b>Debug with me</b><small>Understand an error step by step</small><span class="prompt-arrow">↗</span></button>
+            <button class="prompt-card" data-prompt="Create a focused study plan for operating systems."><span class="prompt-symbol amber">◷</span><b>Make a study plan</b><small>Break learning into sessions</small><span class="prompt-arrow">↗</span></button>
+          </div>
+        </div>
+        <div class="messages" id="messages" aria-live="polite"></div>
+        <div class="composer-area"><div class="composer"><textarea id="messageInput" rows="1" maxlength="5000" placeholder="Message Dino AI..."></textarea><div class="composer-bottom"><div class="composer-hint"><span class="hint-dot"></span> AI can make mistakes. Check important information.</div><button class="send-button" id="sendButton" aria-label="Send message">↑</button></div></div><div class="composer-foot">Dino AI · Your ideas stay in your workspace</div></div>
+      </section>
+    </main>
+    <aside class="history-panel" id="historyPanel"><div class="history-head"><div><span class="eyebrow">YOUR WORKSPACE</span><h3>Recent tasks</h3></div><button id="closeHistory" class="icon-button" aria-label="Close history">×</button></div><div id="taskList" class="task-list"><div class="empty-state">Your recent prompts will appear here.</div></div><div class="history-note">Task history is stored in this app's SQLite database.</div></aside>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script>window.DINO_USERNAME = {{ username|tojson }};</script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Device Companion — Dino AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="companion-page">
+  <nav class="topbar"><a class="brand" href="/"><span class="brand-mark">D</span><span>DINO<span class="brand-light">AI</span></span></a><a class="button button-ghost" href="/">← Back to workspace</a></nav>
+  <main class="companion-wrap">
+    <div class="eyebrow"><span class="pulse-dot"></span> DEVICE COMPANION · BETA</div>
+    <h1>Bring your devices<br><span class="gradient-text">into the same flow.</span></h1>
+    <p class="companion-intro">This starter includes the pairing-code experience and a safe local URL-opening demo. A persistent, authenticated remote-control channel is a future implementation step.</p>
+    <div class="companion-grid">
+      <section class="companion-card"><div class="step-number">01</div><div class="device-icon">▣</div><h2>Pair this device</h2><p>Enter a six-digit code generated in your signed-in Dino AI workspace.</p><form id="pairForm"><label for="pairCode">Pairing code</label><input id="pairCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000 000" required><button class="button button-primary full-width" type="submit">Verify code <span>→</span></button></form><div id="pairStatus" class="inline-status"></div></section>
+      <section class="companion-card"><div class="step-number">02</div><div class="device-icon">↗</div><h2>Open a public website</h2><p>Try the local demo. The browser asks for your confirmation before navigating.</p><form id="urlForm"><label for="targetUrl">Website URL</label><input id="targetUrl" type="url" placeholder="https://www.python.org" required><button class="button button-secondary full-width" type="submit">Validate website <span>→</span></button></form><div id="urlStatus" class="inline-status"></div><button id="openUrl" class="button button-primary full-width hidden" type="button">Open in this browser ↗</button></section>
+    </div>
+    <div class="notice-box"><span>ⓘ</span><p><b>Demo limitation:</b> Pairing confirms a one-time code only; it does not connect this browser to another device yet. Never use this starter for sensitive actions or claim remote control is complete.</p></div>
+  </main>
+  <script src="{{ url_for('static', filename='js/companion.js') }}"></script>
+</body>
+</html>
