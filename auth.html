@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ 'Create account' if mode == 'register' else 'Sign in' }} — Dino AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-page">
+  <a class="brand auth-brand" href="/"><span class="brand-mark">D</span><span>DINO<span class="brand-light">AI</span></span></a>
+  <main class="auth-layout">
+    <div class="auth-side"><div class="eyebrow"><span class="pulse-dot"></span> YOUR WORKFLOW, REIMAGINED</div><h1>A little more<br><span class="gradient-text">possibility.</span></h1><p>Meet the AI workspace built to help your ideas find their next step.</p><div class="auth-decoration"><div class="auth-ring"></div><div class="auth-orb">D</div><span class="auth-star star-one">✦</span><span class="auth-star star-two">✧</span></div></div>
+    <div class="auth-form-wrap"><form class="auth-form" method="post">
+      <div class="form-kicker">{{ 'GET STARTED' if mode == 'register' else 'WELCOME BACK' }}</div>
+      <h2>{{ 'Create your account' if mode == 'register' else 'Sign in to Dino AI' }}</h2>
+      <p class="muted">{{ 'Your next big idea is a few steps away.' if mode == 'register' else 'Pick up where you left off.' }}</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+      <label for="username">Username</label><input id="username" name="username" type="text" minlength="3" maxlength="32" autocomplete="username" placeholder="Choose a username" required>
+      <label for="password">Password</label><input id="password" name="password" type="password" minlength="{{ 8 if mode == 'register' else 1 }}" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" placeholder="{{ 'At least 8 characters' if mode == 'register' else 'Enter your password' }}" required>
+      <button class="button button-primary full-width" type="submit">{{ 'Create account' if mode == 'register' else 'Sign in' }} <span>↗</span></button>
+      <div class="auth-switch">{{ 'Already have an account?' if mode == 'register' else "Don't have an account?" }} <a href="{{ '/login' if mode == 'register' else '/register' }}">{{ 'Sign in' if mode == 'register' else 'Create one' }}</a></div>
+      <div class="auth-security"><span>◇</span> Your password is stored as a secure hash.</div>
+    </form></div>
+  </main>
+</body>
+</html>
