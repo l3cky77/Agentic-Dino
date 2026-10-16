@@ -27,7 +27,15 @@ from werkzeug.security import (
 )
 
 from dotenv import load_dotenv
-from google import genai
+
+# The google "genai" client package has changed names/shape across
+# releases. Import it defensively so the app can still start when the
+# package is not installed (demo mode) and provide helpful logs when
+# initialization fails.
+try:
+    from google import genai  # type: ignore
+except Exception:
+    genai = None
 
 
 # --------------------------------------------------
@@ -76,11 +84,32 @@ if not DATABASE_URL:
         "Configure your Neon PostgreSQL connection string."
     )
 
-gemini_client = (
-    genai.Client(api_key=GEMINI_API_KEY)
-    if GEMINI_API_KEY
-    else None
-)
+# Initialize a genai client if the library and API key are available.
+gemini_client = None
+if genai is not None and GEMINI_API_KEY:
+    try:
+        # Some releases expose a Client(...) constructor, others use a
+        # configure(...) function and then module-level APIs. Try the
+        # common variants and fall back gracefully.
+        try:
+            gemini_client = genai.Client(api_key=GEMINI_API_KEY)  # type: ignore
+            app.logger.info("Initialized genai.Client()")
+        except Exception:
+            try:
+                genai.configure(api_key=GEMINI_API_KEY)  # type: ignore
+                gemini_client = genai
+                app.logger.info("Configured genai module with api_key")
+            except Exception:
+                gemini_client = None
+                app.logger.exception("Failed to initialize genai client")
+    except Exception:
+        gemini_client = None
+        app.logger.exception("Unexpected error while initializing genai client")
+else:
+    if genai is None:
+        app.logger.info("google.genai package not available; running in demo mode")
+    else:
+        app.logger.info("GEMINI_API_KEY not configured; running in demo mode")
 
 
 # --------------------------------------------------
@@ -222,11 +251,56 @@ def safe_http_url(value):
 # GEMINI AI
 # --------------------------------------------------
 
+def _extract_response_text(response):
+    """Try a number of known response shapes and return a string.
+
+    This keeps the application resilient to small SDK changes.
+    """
+    try:
+        # common simple property
+        if hasattr(response, "text") and isinstance(getattr(response, "text"), str):
+            return response.text
+
+        # some SDKs return candidates
+        candidates = getattr(response, "candidates", None)
+        if candidates:
+            first = candidates[0]
+            if hasattr(first, "content"):
+                return first.content
+            if isinstance(first, dict):
+                return first.get("content") or first.get("text")
+
+        # some return an 'output' list
+        output = getattr(response, "output", None)
+        if output:
+            first = output[0]
+            if isinstance(first, dict):
+                return first.get("content") or first.get("text")
+
+        # dict-like response
+        if isinstance(response, dict):
+            if "candidates" in response and response["candidates"]:
+                c = response["candidates"][0]
+                if isinstance(c, dict):
+                    return c.get("content") or c.get("text")
+            if "output" in response and response["output"]:
+                o = response["output"][0]
+                if isinstance(o, dict):
+                    return o.get("content") or o.get("text")
+            # fallback to a string representation
+            return str(response)
+
+    except Exception:
+        app.logger.exception("Failed to extract text from genai response")
+
+    return None
+
+
 def gemini_reply(message, history=None):
     if not gemini_client:
         return (
             "Dino AI is currently in demo mode because "
-            "GEMINI_API_KEY is not configured."
+            "GEMINI_API_KEY or the genai library is not configured."
         )
 
     try:
@@ -271,14 +345,41 @@ Current user message:
 {message}
 """
 
-        response = gemini_client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-        )
+        # Try a few common genai client call shapes so the app works across
+        # versions of the SDK.
+        response = None
 
-        answer = getattr(response, "text", None)
+        # 1) Newer client with models.generate_content
+        if hasattr(gemini_client, "models") and hasattr(gemini_client.models, "generate_content"):
+            try:
+                # Some SDKs expect a list of 'contents' objects; others accept
+                # a plain string. Try both patterns defensively.
+                try:
+                    response = gemini_client.models.generate_content(
+                        model=GEMINI_MODEL,
+                        contents=[{"type": "text", "text": prompt}],
+                    )
+                except Exception:
+                    response = gemini_client.models.generate_content(
+                        model=GEMINI_MODEL,
+                        contents=prompt,
+                    )
+
+        # 2) genai module configured with generate_text API
+        elif hasattr(gemini_client, "generate_text"):
+            response = gemini_client.generate_text(model=GEMINI_MODEL, prompt=prompt)
+
+        # 3) older module-level API name 'generate' or 'generate_text'
+        elif genai is not None and hasattr(genai, "generate_text"):
+            response = genai.generate_text(model=GEMINI_MODEL, prompt=prompt)
+
+        else:
+            raise RuntimeError("Unsupported genai client API shape")
+
+        answer = _extract_response_text(response)
 
         if not answer:
+            app.logger.warning("GenAI returned an empty response object: %s", repr(response))
             return (
                 "Dino AI could not generate a response. "
                 "Please try again."
